@@ -1,0 +1,514 @@
+package com.zy.recursion.util;
+
+import java.io.*;
+import java.net.ConnectException;
+import java.text.DecimalFormat;
+import java.util.List;
+import java.util.Stack;
+
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.StreamGobbler;
+import com.zy.recursion.entity.device;
+import io.micrometer.core.instrument.util.StringUtils;
+import org.slf4j.Logger;
+import org.json.JSONObject;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class ConnectLinuxCommand {
+    private static final Logger logger = LoggerFactory.getLogger(ConnectLinuxCommand.class);
+    //    private static Connection conn;
+//    private static Session session;
+    private static String DEFAULTCHARTSET = "UTF-8";
+
+    @Autowired
+    com.zy.recursion.service.device.deviceService deviceService;
+
+    public static Boolean login(String ip, String name, String password) throws IOException {
+        boolean flag = false;
+        int connectTimes = 1;
+        Connection conn;
+        long waitTime = System.currentTimeMillis() + 2000;
+        do {
+            try {
+                conn = new Connection(ip);
+                conn.connect();// 连
+                break;
+            } catch (ConnectException e) {
+                return false;
+            } catch (IOException e) {
+                connectTimes++;
+                return false;
+//                e.printStackTrace();
+            }
+        } while (System.currentTimeMillis() < waitTime && 20 <= connectTimes);
+        try {
+            flag = conn.authenticateWithPassword(name, password);// 认证
+            if (flag) {
+                logger.info("认证成功！");
+//                conn.close();
+            } else {
+                logger.info("认证失败！");
+                conn.close();
+            }
+            return flag;
+        } catch (IllegalStateException e) {
+            return false;
+        }
+    }
+
+
+    public static Connection login1(String ip, String name, String password) throws IOException {
+        Connection conn;
+        boolean flag = false;
+        int connectTimes = 1;
+        long waitTime = System.currentTimeMillis() + 2000;
+        do {
+            try {
+                conn = new Connection(ip);
+                conn.connect();// 连
+                break;
+            } catch (ConnectException e) {
+                return null;
+            } catch (IOException e) {
+                connectTimes++;
+                return null;
+//                e.printStackTrace();
+            }
+        } while (System.currentTimeMillis() < waitTime && 20 <= connectTimes);
+        try {
+            flag = conn.authenticateWithPassword(name, password);// 认证
+            if (flag) {
+                logger.info("认证成功！");
+//                conn.close();
+            } else {
+                logger.info("认证失败！");
+                conn.close();
+            }
+            return conn;
+        } catch (IllegalStateException e) {
+            return null;
+        }
+    }
+
+    public static String[] execute(String ip, String name, String pwd, String[] cmd) throws IOException {
+        String[] result = new String[cmd.length];
+        Connection connection = login1(ip, name, pwd);
+        if (connection != null) {
+            try {
+                Session session = null;
+                for (int i = 0; i < cmd.length; i++) {
+                    session = connection.openSession();
+                    session.execCommand(cmd[i]);// 执行命令
+                    result[i] = processStdout(session.getStdout(), DEFAULTCHARTSET);
+                    // 如果为得到标准输出为空，说明脚本执行出错了
+                    if (StringUtils.isBlank(result[i])) {
+                        result[i] = processStdout(session.getStderr(), DEFAULTCHARTSET);
+                    }
+                }
+                connection.close();
+                session.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return result;
+        }
+        return null;
+    }
+
+    /**
+     * @param in      输入流对象
+     * @param charset 编码
+     * @return String 以纯文本的格式返回
+     * @throws
+     * @Title: processStdout
+     * @Description: 解析脚本执行的返回结果
+     */
+    public static String processStdout(InputStream in, String charset) {
+        InputStream stdout = new StreamGobbler(in);
+        StringBuffer buffer = new StringBuffer();
+//        Stack<String> stack = new Stack<>();
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(stdout, charset));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+//                stack.push(line);
+                buffer.append(line + "\n");
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return buffer.toString();
+    }
+
+    /**
+     * @param
+     * @Description:通过@Async注解表明该方法是一个异步方法， 如果注解在类级别上，则表明该类所有的方法都是异步方法，而这里的方法自动被注入使用ThreadPoolTaskExecutor作为TaskExecutor
+     * @Title: executeAysncTask1
+     * @Date: 2018年9月21日 下午2:54:32
+     * @Author: OnlyMate
+     * @Throws
+     */
+
+//    @Async
+    public Float disk_utilization(String result) throws IOException {
+        int used = 0;
+        int available = 0;
+        Stack stack = new Stack();
+//        if (ConnectLinuxCommand.execute(ip, name, pwd, "df -k") != null) {
+//            BufferedReader br = new BufferedReader(new StringReader(ConnectLinuxCommand.execute(ip, name, pwd, "df -k")));
+        BufferedReader br = new BufferedReader(new StringReader(result));
+        String line = null;
+        while ((line = br.readLine()) != null) {
+            stack.push(line);
+        }
+        br.close();
+        for (int i = 1; i < stack.size(); i++) {
+            String a = stack.pop().toString();
+            used = used + Integer.parseInt(a.split("\\s+")[2]);
+//                System.out.println("已用" + used);
+            available = available + Integer.parseInt(a.split("\\s+")[3]);
+//                System.out.println("可用" + available);
+        }
+        DecimalFormat df = new DecimalFormat("0.0000");
+        Float disk_utilization = Float.valueOf(df.format((float) used / (available + used)));
+//            System.out.println(disk_utilization);
+        return disk_utilization;
+//        } else {
+//            return null;
+//        }
+    }
+
+    //    @Async
+    public Float memory_utilization(String result) throws IOException {
+        Stack stack1 = new Stack();
+//        BufferedReader br1 = new BufferedReader(new StringReader(ConnectLinuxCommand.execute(ip, name, pwd, "sar -r 1 1")));
+        BufferedReader br1 = new BufferedReader(new StringReader(result));
+        String line1 = null;
+        while ((line1 = br1.readLine()) != null) {
+            stack1.push(line1);
+        }
+        br1.close();
+        String memory = stack1.pop().toString();
+        Float memory_utilization = Float.valueOf(memory.split("\\s+")[3]);
+        return memory_utilization;
+    }
+
+    //    @Async
+    public Float cpu_utilization(String result) throws IOException {
+        Stack stack2 = new Stack();
+        BufferedReader br3 = new BufferedReader(new StringReader(result));
+//        BufferedReader br2 = new BufferedReader(new StringReader(ConnectLinuxCommand.execute(ip, name, pwd, "sar -u 1 1")));
+        String line2 = null;
+        while ((line2 = br3.readLine()) != null) {
+            stack2.push(line2);
+        }
+        br3.close();
+        String cpu = stack2.pop().toString();
+        DecimalFormat df1 = new DecimalFormat("0.00");
+        Float cpu_utilization = 100 - Float.valueOf(cpu.split("\\s+")[7]);
+        return cpu_utilization;
+    }
+
+
+    //    @Async
+    public JSONObject networkCard(String result, String networkCard) throws IOException {
+        Stack stack2 = new Stack();
+        JSONObject jsonObject = new JSONObject();
+        BufferedReader br2 = new BufferedReader(new StringReader(result));
+//        BufferedReader br2 = new BufferedReader(new StringReader(ConnectLinuxCommand.execute(ip, name, pwd, "sar -n DEV 1 1")));
+        String line2 = null;
+        while ((line2 = br2.readLine()) != null) {
+            stack2.push(line2);
+        }
+        br2.close();
+        for (int i = 0; i < stack2.size(); i++) {
+            String[] mes = stack2.pop().toString().split("\\s+");
+            if (mes.length != 1) {
+                if (mes[1].equals(networkCard) && mes[0].contains(":")) {
+                    System.out.println(mes[1]);
+                    jsonObject.put("rxkB", mes[4]);
+                    jsonObject.put("txkB", mes[5]);
+                    return jsonObject;
+                }
+            }
+        }
+        return null;
+    }
+
+
+    public String logRead(List<device> list, String address) throws IOException {
+        Stack stack2 = new Stack();
+        int receive = 0;
+        int drop = 0;
+        int reply = 0;
+        int avg_rep = 0;
+        int success = 0;
+        int other = 0;
+        float success_rate = 0;
+        float hit_rate = 0;
+        int recur = 0;
+        int avg_recur = 0;
+        float recur_success = 0;
+        float all_receive = 0;
+        String total_time = "无";
+        String time = "0";
+        int cacheDeviceCount = 0;
+        int recursionDeviceCount = 0;
+        if (list.size() != 0) {
+            for (device o : list) {
+                if (o.getDeviceType().equals("缓存")) {
+                    cacheDeviceCount++;
+                    String[] cmd = {"tail -2 " + address};
+                    String[] result = ConnectLinuxCommand.execute(o.getDeviceIp(), o.getDeviceUserName(), o.getDevicePwd(), cmd);
+                    BufferedReader br2 = new BufferedReader(new StringReader(result[0]));
+                    String line2 = null;
+                    while ((line2 = br2.readLine()) != null) {
+                        stack2.push(line2);
+                    }
+                    br2.close();
+                    String[] splitAddress = stack2.pop().toString().split("\\|");
+                    if (splitAddress[0].contains(":")) {
+                        time = splitAddress[0].substring(1, 9);
+                        receive = Integer.parseInt(splitAddress[0].substring(10).trim()) + receive;
+                        drop = Integer.parseInt(splitAddress[1].trim()) + drop;
+                        reply = Integer.parseInt(splitAddress[2].trim()) + reply;
+                        avg_rep = Integer.parseInt(splitAddress[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
+                        success = Integer.parseInt(splitAddress[4].trim()) + success;
+                        other = Integer.parseInt(splitAddress[5].trim()) + other;
+                        success_rate = Float.parseFloat(splitAddress[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
+                        hit_rate = Float.parseFloat(splitAddress[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
+                        recur = Integer.parseInt(splitAddress[8].trim()) + recur;
+                        avg_recur = Integer.parseInt(splitAddress[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
+                        recur_success = Float.parseFloat(splitAddress[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
+                        all_receive = Float.parseFloat(splitAddress[11].trim()) + all_receive;
+                        total_time = splitAddress[12];
+                        String text = total_time.substring(6, 18);
+                        String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
+                        System.out.println(condition);
+                        switch (condition) {
+                            case "Dhms":
+                                total_time = text.substring(0, 2).trim() + "天" + text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "MDhm":
+                                total_time = text.substring(0, 2).trim() + "月" + text.substring(3, 5).trim() + "天" + text.substring(6, 8).trim() + "小时" + text.substring(9, 11).trim() + "分钟";
+                                break;
+                            case "YMDh":
+                                total_time = text.substring(0, 2).trim() + "年" + text.substring(3, 5).trim() + "月" + text.substring(6, 8).trim() + "天" + text.substring(9, 11).trim() + "小时";
+                                break;
+                            case " hms":
+                                total_time = text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "  ms":
+                                total_time = text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "   s":
+                                total_time = text.substring(9, 11).trim() + "秒";
+                                break;
+                        }
+                    } else {
+                        String[] splitAddress1 = stack2.pop().toString().split("\\|");
+                        time = splitAddress1[0].substring(1, 9);
+                        receive = Integer.parseInt(splitAddress1[0].substring(10).trim()) + receive;
+                        drop = Integer.parseInt(splitAddress1[1].trim()) + drop;
+                        reply = Integer.parseInt(splitAddress1[2].trim()) + reply;
+                        avg_rep = Integer.parseInt(splitAddress1[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
+                        success = Integer.parseInt(splitAddress1[4].trim()) + success;
+                        other = Integer.parseInt(splitAddress1[5].trim()) + other;
+                        success_rate = Float.parseFloat(splitAddress1[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
+                        hit_rate = Float.parseFloat(splitAddress1[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
+                        recur = Integer.parseInt(splitAddress1[8].trim()) + recur;
+                        avg_recur = Integer.parseInt(splitAddress1[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
+                        recur_success = Float.parseFloat(splitAddress1[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
+                        all_receive = Float.parseFloat(splitAddress1[11].trim()) + all_receive;
+                        total_time = splitAddress1[12].trim();
+                        String text = total_time.substring(6, 18);
+                        String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
+                        System.out.println(condition);
+                        switch (condition) {
+                            case "Dhms":
+                                total_time = text.substring(0, 2).trim() + "天" + text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "MDhm":
+                                total_time = text.substring(0, 2).trim() + "月" + text.substring(3, 5).trim() + "天" + text.substring(6, 8).trim() + "小时" + text.substring(9, 11).trim() + "分钟";
+                                break;
+                            case "YMDh":
+                                total_time = text.substring(0, 2).trim() + "年" + text.substring(3, 5).trim() + "月" + text.substring(6, 8).trim() + "天" + text.substring(9, 11).trim() + "小时";
+                                break;
+                            case " hms":
+                                total_time = text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "  ms":
+                                total_time = text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                                break;
+                            case "   s":
+                                total_time = text.substring(9, 11).trim() + "秒";
+                                break;
+                        }
+                    }
+                }else {
+                    recursionDeviceCount++;
+                }
+            }
+            JSONObject jsonObject = new JSONObject();
+            if (cacheDeviceCount!=0){
+                jsonObject.put("AVG_REP_TIME", avg_rep /cacheDeviceCount);
+                jsonObject.put("SUCCESS_RATE", success_rate / cacheDeviceCount);
+                jsonObject.put("AVG_RECUR_TIME", avg_recur / cacheDeviceCount);
+                jsonObject.put("RECUR_SUCCESS", recur_success / cacheDeviceCount);
+            }else {
+                jsonObject.put("AVG_REP_TIME", avg_rep);
+                jsonObject.put("SUCCESS_RATE", success_rate);
+                jsonObject.put("AVG_RECUR_TIME", avg_recur);
+                jsonObject.put("RECUR_SUCCESS", recur_success);
+            }
+            jsonObject.put("TIME", time);
+            jsonObject.put("RECEIVE", receive);
+            jsonObject.put("DROP", drop);
+            jsonObject.put("REPLY", reply);
+            jsonObject.put("SUCCESS", success);
+            jsonObject.put("OTHER", other);
+            jsonObject.put("HIT_RATE", hit_rate / list.size());
+            jsonObject.put("RECUR", recur);
+            jsonObject.put("ALL_RECEIVE", all_receive);
+            jsonObject.put("total_time", total_time);
+            return jsonObject.toString();
+        }
+        return null;
+    }
+
+    public String logRead1(device o, String address) throws IOException {
+        Stack stack2 = new Stack();
+        int receive = 0;
+        int drop = 0;
+        int reply = 0;
+        int avg_rep = 0;
+        int success = 0;
+        int other = 0;
+        float success_rate = 0;
+        float hit_rate = 0;
+        int recur = 0;
+        int avg_recur = 0;
+        float recur_success = 0;
+        float all_receive = 0;
+        String total_time = null;
+        String time = null;
+        String[] cmd = {"tail -2 " + address};
+        String[] result = ConnectLinuxCommand.execute(o.getDeviceIp(), o.getDeviceUserName(), o.getDevicePwd(), cmd);
+        BufferedReader br2 = new BufferedReader(new StringReader(result[0]));
+        String line2 = null;
+        while ((line2 = br2.readLine()) != null) {
+            stack2.push(line2);
+        }
+        br2.close();
+        String[] splitAddress = stack2.pop().toString().split("\\|");
+        if (splitAddress[0].contains(":")) {
+            time = splitAddress[0].substring(1, 9);
+            receive = Integer.parseInt(splitAddress[0].substring(10).trim()) + receive;
+            drop = Integer.parseInt(splitAddress[1].trim()) + drop;
+            reply = Integer.parseInt(splitAddress[2].trim()) + reply;
+            avg_rep = Integer.parseInt(splitAddress[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
+            success = Integer.parseInt(splitAddress[4].trim()) + success;
+            other = Integer.parseInt(splitAddress[5].trim()) + other;
+            success_rate = Float.parseFloat(splitAddress[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
+            hit_rate = Float.parseFloat(splitAddress[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
+            recur = Integer.parseInt(splitAddress[8].trim()) + recur;
+            avg_recur = Integer.parseInt(splitAddress[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
+            recur_success = Float.parseFloat(splitAddress[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
+            all_receive = Float.parseFloat(splitAddress[11].trim()) + all_receive;
+            total_time = splitAddress[12];
+            String text = total_time.substring(6, 18);
+            String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
+            System.out.println(condition);
+            switch (condition) {
+                case "Dhms":
+                    total_time = text.substring(0, 2).trim() + "天" + text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "MDhm":
+                    total_time = text.substring(0, 2).trim() + "月" + text.substring(3, 5).trim() + "天" + text.substring(6, 8).trim() + "小时" + text.substring(9, 11).trim() + "分钟";
+                    break;
+                case "YMDh":
+                    total_time = text.substring(0, 2).trim() + "年" + text.substring(3, 5).trim() + "月" + text.substring(6, 8).trim() + "天" + text.substring(9, 11).trim() + "小时";
+                    break;
+                case " hms":
+                    total_time = text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "  ms":
+                    total_time = text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "   s":
+                    total_time = text.substring(9, 11).trim() + "秒";
+                    break;
+            }
+        } else {
+            String[] splitAddress1 = stack2.pop().toString().split("\\|");
+            time = splitAddress1[0].substring(1, 9);
+            receive = Integer.parseInt(splitAddress1[0].substring(10).trim()) + receive;
+            drop = Integer.parseInt(splitAddress1[1].trim()) + drop;
+            reply = Integer.parseInt(splitAddress1[2].trim()) + reply;
+            avg_rep = Integer.parseInt(splitAddress1[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
+            success = Integer.parseInt(splitAddress1[4].trim()) + success;
+            other = Integer.parseInt(splitAddress1[5].trim()) + other;
+            success_rate = Float.parseFloat(splitAddress1[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
+            hit_rate = Float.parseFloat(splitAddress1[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
+            recur = Integer.parseInt(splitAddress1[8].trim()) + recur;
+            avg_recur = Integer.parseInt(splitAddress1[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
+            recur_success = Float.parseFloat(splitAddress1[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
+            all_receive = Float.parseFloat(splitAddress1[11].trim()) + all_receive;
+            total_time = splitAddress1[12].trim();
+            String text = total_time.substring(6, 18);
+            String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
+            System.out.println(condition);
+            switch (condition) {
+                case "Dhms":
+                    total_time = text.substring(0, 2).trim() + "天" + text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "MDhm":
+                    total_time = text.substring(0, 2).trim() + "月" + text.substring(3, 5).trim() + "天" + text.substring(6, 8).trim() + "小时" + text.substring(9, 11).trim() + "分钟";
+                    break;
+                case "YMDh":
+                    total_time = text.substring(0, 2).trim() + "年" + text.substring(3, 5).trim() + "月" + text.substring(6, 8).trim() + "天" + text.substring(9, 11).trim() + "小时";
+                    break;
+                case " hms":
+                    total_time = text.substring(3, 5).trim() + "小时" + text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "  ms":
+                    total_time = text.substring(6, 8).trim() + "分钟" + text.substring(9, 11).trim() + "秒";
+                    break;
+                case "   s":
+                    total_time = text.substring(9, 11).trim() + "秒";
+                    break;
+            }
+        }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("TIME", time);
+        jsonObject.put("RECEIVE", receive);
+        jsonObject.put("DROP", drop);
+        jsonObject.put("REPLY", reply);
+        jsonObject.put("AVG_REP_TIME", avg_rep);
+        jsonObject.put("SUCCESS", success);
+        jsonObject.put("OTHER", other);
+        jsonObject.put("SUCCESS_RATE", success_rate);
+        jsonObject.put("HIT_RATE", hit_rate);
+        jsonObject.put("RECUR", recur);
+        jsonObject.put("AVG_RECUR_TIME", avg_recur);
+        jsonObject.put("RECUR_SUCCESS", recur_success);
+        jsonObject.put("ALL_RECEIVE", all_receive);
+        jsonObject.put("total_time", total_time);
+        return jsonObject.toString();
+    }
+
+
+    public static void main(String[] args) throws IOException {
+
+    }
+}
+
+
+
+
