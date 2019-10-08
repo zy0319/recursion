@@ -1,7 +1,6 @@
 package com.zy.recursion.entity;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 
 public class cache {
 
@@ -9,6 +8,8 @@ public class cache {
     private String deleteOperation;
     private String deleteResult;
     private String handle;
+    private String nodeName;
+    private String deviceIp;
 
     public String getHandle() {
         return handle;
@@ -40,5 +41,21 @@ public class cache {
 
     public void setDeleteResult(String deleteResult) {
         this.deleteResult = deleteResult;
+    }
+
+    public String getNodeName() {
+        return nodeName;
+    }
+
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
+    }
+
+    public String getDeviceIp() {
+        return deviceIp;
+    }
+
+    public void setDeviceIp(String deviceIp) {
+        this.deviceIp = deviceIp;
     }
 }

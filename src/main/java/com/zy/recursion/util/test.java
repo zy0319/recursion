@@ -1,17 +1,22 @@
-//package com.zy.recursion.util;
-//
-//
-//import ch.ethz.ssh2.Connection;
-//import ch.ethz.ssh2.Session;
-//import ch.ethz.ssh2.StreamGobbler;
-//import io.micrometer.core.instrument.util.StringUtils;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//
-//import java.io.*;
-//import java.net.ConnectException;
-//
-//public class test {
+package com.zy.recursion.util;
+
+import java.util.ArrayList;
+import ch.ethz.ssh2.Connection;
+import ch.ethz.ssh2.Session;
+import ch.ethz.ssh2.StreamGobbler;
+import io.micrometer.core.instrument.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.*;
+import java.net.ConnectException;
+
+public class test {
+
+
+    public static void main(String[] args) {
+//        ListNode listNode
+    }
+
 //    private static final Logger logger = LoggerFactory.getLogger(ConnectLinuxCommand.class);
 //    private static Connection conn;
 //    private static Session session;
@@ -91,5 +96,5 @@
 //        }
 //        return buffer.toString();
 //    }
-//
-//}
+
+}

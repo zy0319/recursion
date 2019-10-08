@@ -6,26 +6,27 @@
         deleteTime,
         deleteOperation,
         deleteResult,
-        handle
+        handle,
+        nodeName,
+        deviceIp
         )
         VALUES
           (
             #{deleteTime},
             #{deleteOperation},
             #{deleteResult},
-            #{handle}
+            #{handle},
+            #{nodeName},
+            #{deviceIp}
           )
     </insert>
 
     <select id="selectCache" resultType="com.zy.recursion.entity.cache">
         SELECT
-          deleteTime,
-          deleteOperation,
-          deleteResult,
-          handle
+          *
         FROM
           cache
         WHERE
-          deleteTime BETWEEN DATE_FORMAT(#{startTime}, '%Y-%m-%d') and DATE_FORMAT(#{endTime}, '%Y-%m-%d')
+          DATE_FORMAT(deleteTime, '%Y-%m-%d') &gt;= DATE_FORMAT(#{startTime}, '%Y-%m-%d') AND DATE_FORMAT(deleteTime, '%Y-%m-%d') &lt;= DATE_FORMAT(#{endTime}, '%Y-%m-%d')
     </select>
 </mapper>

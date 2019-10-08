@@ -1,12 +1,17 @@
 package com.zy.recursion.Controller;
+
+import com.alibaba.fastjson.JSONArray;
 import com.zy.recursion.entity.address;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.service.device.deviceService;
 import com.zy.recursion.util.ConnectLinuxCommand;
+
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -44,7 +49,7 @@ public class Linux {
                     disk = disk1 + disk;
                 }
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("disk_utilization", disk/list.size());
+                jsonObject.put("disk_utilization", disk / list.size());
                 System.out.println(jsonObject.toString());
                 return jsonObject.toString();
             }
@@ -365,6 +370,64 @@ public class Linux {
             return jsonObject.toString();
         } else {
             return "服务器连接失败";
+        }
+    }
+
+    @CrossOrigin
+    @PostMapping(value = "/nodeDataSelect")
+    public String nodeDataSelect(@RequestBody(required = false) String requestBody) throws IOException {
+        JSONObject jsonObject1 = new JSONObject(requestBody);
+        List list1 = new ArrayList();
+        String nodeName = jsonObject1.getString("nodeName");
+        List<device> list = deviceService.selectIpByNodeName(nodeName);
+        float disk = 0f;
+        float memory = 0f;
+        float cpu = 0f;
+        if (list.size() != 0) {
+            for (device o : list) {
+                JSONObject jsonObject3 = new JSONObject();
+                String ip = o.getDeviceIp();
+                String name = o.getDeviceUserName();
+                String pwd = o.getDevicePwd();
+                String type = o.getDeviceType();
+                String[] cmd = {"df -k", "sar -r 1 1", "sar -u 1 1"};
+                String[] result = ConnectLinuxCommand.execute(ip, name, pwd, cmd);
+                List list2 = new ArrayList();
+                if (result != null) {
+                    float disk1 = new ConnectLinuxCommand().disk_utilization(result[0]);
+                    float memory1 = new ConnectLinuxCommand().memory_utilization(result[1]);
+                    float cpu1 = new ConnectLinuxCommand().cpu_utilization(result[2]);
+                    disk = disk1 + disk;
+                    memory = memory1 + memory;
+                    cpu = cpu1 + cpu;
+                    if (disk1 > 0.9) {
+                        list2.add("硬盘利用率过高");
+                        jsonObject3.put("status1","一般");
+                    }
+                    if (memory1 > 90) {
+                        list2.add("内存利用率过高");
+                        jsonObject3.put("status1","一般");
+                    }
+                    if (cpu1 > 90) {
+                        list2.add("内存利用率过高");
+                        jsonObject3.put("status1","重要");
+                    }
+                    if(disk1<=0.9 && memory1<=90 && cpu1<=90){
+                        list2.add("正常");
+                        jsonObject3.put("status1","正常");
+                    }
+                } else {
+                    list2.add("服务器连接失败");
+                    jsonObject3.put("status1","严重");
+                }
+                jsonObject3.put("ip",ip);
+                jsonObject3.put("type",type);
+                jsonObject3.put("status",list2.toString());
+                list1.add(jsonObject3);
+            }
+            return list1.toString();
+        } else {
+            return null;
         }
     }
 

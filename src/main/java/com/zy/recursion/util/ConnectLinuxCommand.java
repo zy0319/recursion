@@ -361,11 +361,13 @@ public class ConnectLinuxCommand {
                 jsonObject.put("SUCCESS_RATE", success_rate / cacheDeviceCount);
                 jsonObject.put("AVG_RECUR_TIME", avg_recur / cacheDeviceCount);
                 jsonObject.put("RECUR_SUCCESS", recur_success / cacheDeviceCount);
+                jsonObject.put("HIT_RATE", hit_rate / cacheDeviceCount);
             }else {
                 jsonObject.put("AVG_REP_TIME", avg_rep);
                 jsonObject.put("SUCCESS_RATE", success_rate);
                 jsonObject.put("AVG_RECUR_TIME", avg_recur);
                 jsonObject.put("RECUR_SUCCESS", recur_success);
+                jsonObject.put("HIT_RATE", hit_rate);
             }
             jsonObject.put("TIME", time);
             jsonObject.put("RECEIVE", receive);
@@ -373,7 +375,6 @@ public class ConnectLinuxCommand {
             jsonObject.put("REPLY", reply);
             jsonObject.put("SUCCESS", success);
             jsonObject.put("OTHER", other);
-            jsonObject.put("HIT_RATE", hit_rate / list.size());
             jsonObject.put("RECUR", recur);
             jsonObject.put("ALL_RECEIVE", all_receive);
             jsonObject.put("total_time", total_time);

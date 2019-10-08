@@ -10,7 +10,7 @@ spring:
       content-type: text/html
   datasource:
     druid:
-      url: jdbc:mysql://localhost:3306/node?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true
+      url: jdbc:mysql://localhost:3306/node?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&serverTimezone=GMT%2b8
       username: root
       password: zhangyi20120.0
       initial-size: 1
@@ -19,6 +19,8 @@ spring:
       test-on-borrow: true
       # MySQL 8.x: com.mysql.cj.jdbc.Driver
       driver-class-name: com.mysql.jdbc.Driver
+  jackson:
+    time-zone: GMT+8
 
 address:
   address: /root/recursion/File/handle_cache_stats

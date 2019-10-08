@@ -1,5 +1,7 @@
 package com.zy.recursion.Controller;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.zy.recursion.entity.cache;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.entity.returnMessage;
@@ -32,9 +34,10 @@ public class cacheDelete {
     @Autowired
     private cacheService cacheService;
 
+
     @CrossOrigin
     @PostMapping(value = "/handleDelete")
-    public String cacheDelete(@RequestBody(required = false) String requesyBody) throws IOException {
+    public returnMessage cacheDelete(@RequestBody(required = false) String requesyBody) throws IOException {
         Logger logger = LoggerFactory.getLogger(cacheDelete.class);
         cache cache = new cache();
         JSONObject jsonObject = new JSONObject(requesyBody);
@@ -44,6 +47,8 @@ public class cacheDelete {
         String usrName = device.getDeviceUserName();
         String pwd = device.getDevicePwd();
         String type = device.getDeviceType();
+        String nodeName = device.getNodeName();
+        returnMessage returnMessage = new returnMessage();
         if(type.equals("缓存")){
             String[] cmd = {"./../home/fnii/handle_cache/bin/cmdsh3 127.0.0.1 15000 2 \"cache delete " + handle + "\""};
             logger.info("在设备" + ip + "上执行" + cmd[0]);
@@ -59,15 +64,27 @@ public class cacheDelete {
                 cache.setDeleteTime(ts);
                 cache.setDeleteOperation("删除单条标识");
                 cache.setHandle(handle);
-                cache.setDeleteResult(result1);
+                if (result1.equals("ok.")){
+                    cache.setDeleteResult("ok");
+                }else {
+                    cache.setDeleteResult("false");
+                }
+                cache.setDeviceIp(ip);
+                cache.setNodeName(nodeName);
                 cacheService.addCache(cache);
                 logger.info("记录存储成功");
-                return result1;
+                returnMessage.setStatus(0);
+                returnMessage.setMessage(result1);
+                return returnMessage;
             } else {
-                return null;
+                returnMessage.setStatus(1);
+                returnMessage.setMessage("服务器连接失败");
+                return returnMessage;
             }
         }else {
-            return null;
+            returnMessage.setStatus(1);
+            returnMessage.setMessage("该服务器不是缓存服务器");
+            return returnMessage;
         }
     }
 
@@ -85,6 +102,7 @@ public class cacheDelete {
         String usrName = device.getDeviceUserName();
         String pwd = device.getDevicePwd();
         String type = device.getDeviceType();
+        String nodeName = device.getNodeName();
         if(type.equals("缓存")){
             List result1 = new ArrayList();
             JSONObject jsonObject1 = new JSONObject();
@@ -100,19 +118,26 @@ public class cacheDelete {
             if (result != null) {
                 for (int i = 0; i < handle1.length; i++) {
                     String m = result[i].split(" ")[3];
-                    if (m.substring(0, m.length() - 1).equals("ok")) {
+                    if (m.substring(0, m.length() - 1).equals("ok.")) {
+                        cache.setDeleteTime(ts);
+                        cache.setDeleteOperation("删除多条标识");
+                        cache.setHandle(handle1[i]);
+                        cache.setDeleteResult("ok");
+                        cache.setDeviceIp(ip);
+                        cache.setNodeName(nodeName);
+                        cacheService.addCache(cache);
                         jsonObject1.put(handle1[i], "ok");
                     } else {
+                        cache.setDeleteTime(ts);
+                        cache.setDeleteOperation("删除多条标识");
+                        cache.setHandle(handle1[i]);
+                        cache.setDeleteResult("false");
+                        cache.setDeviceIp(ip);
+                        cache.setNodeName(nodeName);
+                        cacheService.addCache(cache);
                         jsonObject1.put(handle1[i], "false");
                     }
                 }
-                logger.info(result1.toString());
-                cache.setDeleteTime(ts);
-                cache.setDeleteOperation("删除多条标识");
-                cache.setHandle(handle);
-                cache.setDeleteResult(result1.toString());
-                cacheService.addCache(cache);
-                logger.info("记录存储成功");
                 return jsonObject1.toString();
             } else {
                 return null;
@@ -134,6 +159,7 @@ public class cacheDelete {
         String usrName = device.getDeviceUserName();
         String pwd = device.getDevicePwd();
         String type = device.getDeviceType();
+        String nodeName = device.getNodeName();
         if(type.equals("缓存")){
             String[] cmd = {"./../home/fnii/handle_cache/bin/cmdsh3 127.0.0.1 15000 2 \"cache flush_all\""};
             logger.info("在设备" + ip + "上执行" + cmd[0]);
@@ -148,7 +174,9 @@ public class cacheDelete {
                 cache.setHandle("全部");
                 cache.setDeleteOperation("删除" + ip + "对应设备的缓存");
                 cache.setDeleteTime(ts);
-                cache.setDeleteResult(result);
+                cache.setDeleteResult("ok");
+                cache.setNodeName(nodeName);
+                cache.setDeviceIp(ip);
                 cacheService.addCache(cache);
                 returnMessage.setStatus(0);
                 returnMessage.setMessage("删除成功");
@@ -159,9 +187,10 @@ public class cacheDelete {
                 return returnMessage;
             }
         }else {
-            return null;
+            returnMessage.setStatus(0);
+            returnMessage.setMessage("该服务器不是缓存服务器");
+            return returnMessage;
         }
-
     }
 
     @CrossOrigin
@@ -171,50 +200,74 @@ public class cacheDelete {
         JSONObject jsonObject = new JSONObject(requesyBody);
         String nodeName = jsonObject.getString("nodeName");
         List<device> list = deviceService.selectIpByNodeName(nodeName);
-        List falseList = new ArrayList();
-        List sucList = new ArrayList();
-        for (device device : list) {
-            String ip = device.getDeviceIp();
-            String usrName = device.getDeviceUserName();
-            String pwd = device.getDevicePwd();
-            String type = device.getDeviceType();
-            if (type.equals("缓存")){
-                String[] cmd = {"./../home/fnii/handle_cache/bin/cmdsh3 127.0.0.1 15000 2 \"cache flush_all\""};
-                String[] result = ConnectLinuxCommand.execute(ip, usrName, pwd, cmd);
-                if (result != null) {
-                    sucList.add(ip);
-                    logger.info("删除设备" + ip + "缓存结果：" + result[0]);
+        if(list.size()!=0){
+            List falseList = new ArrayList();
+            List sucList = new ArrayList();
+            List falseList1 = new ArrayList();
+            for (device device : list) {
+                String ip = device.getDeviceIp();
+                String usrName = device.getDeviceUserName();
+                String pwd = device.getDevicePwd();
+                String type = device.getDeviceType();
+                if (type.equals("缓存")){
+                    String[] cmd = {"./../home/fnii/handle_cache/bin/cmdsh3 127.0.0.1 15000 2 \"cache flush_all\""};
+                    String[] result = ConnectLinuxCommand.execute(ip, usrName, pwd, cmd);
+                    if (result != null) {
+                        sucList.add(ip);
+                        logger.info("删除设备" + ip + "缓存结果：" + result[0]);
+                    } else {
+                        falseList.add(ip);
+                        logger.info(ip + "连接失败");
+                    }
                 } else {
-                    falseList.add(ip);
-                    logger.info(ip + "连接失败");
+                    falseList1.add(ip);
+                    logger.info(ip + "不是缓存服务器");
                 }
-            }else {
-                falseList.add(ip);
-                logger.info(ip + "不是缓存服务器");
             }
+            Date date = new Date();
+            cache cache = new cache();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+            String deleteTime = dateFormat.format(date);
+            Timestamp ts = Timestamp.valueOf(deleteTime);
+            logger.info("当前时间为"+ts);
+            cache.setHandle("全部");
+            cache.setDeleteOperation("删除" + nodeName + "节点的缓存");
+            cache.setDeleteTime(ts);
+            cache.setDeviceIp("全部");
+            cache.setNodeName(nodeName);
+            JSONObject jsonObject1 = new JSONObject();
+            jsonObject1.put("删除成功的设备",sucList.toString());
+            jsonObject1.put("删除失败的设备",falseList.toString());
+            String result = "删除成功的设备：" + sucList.toString() + "删除失败的设备" + falseList.toString();
+            if(falseList.size()!=0){
+                cache.setDeleteResult("false");
+            }else if(falseList1.size()!=0 && sucList.size()==0){
+                cache.setDeleteResult("false");
+            }else {
+                cache.setDeleteResult("ok");
+            }
+            cacheService.addCache(cache);
+            return jsonObject1.toString();
+        }else {
+            return "无设备";
         }
-        Date date = new Date();
-        cache cache = new cache();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        String deleteTime = dateFormat.format(date);
-        Timestamp ts = Timestamp.valueOf(deleteTime);
-        cache.setHandle("全部");
-        cache.setDeleteOperation("删除" + nodeName + "节点的缓存");
-        cache.setDeleteTime(ts);
-        String result = "删除成功的设备：" + sucList.toString() + " 删除失败的设备" + falseList.toString();
-        cache.setDeleteResult(result);
-        cacheService.addCache(cache);
-        return result;
     }
 
     @CrossOrigin
     @PostMapping(value = "/cacheSelect")
-    public List<cache> cacheSelect(@RequestBody(required = false) String requesyBody) throws IOException {
+    public String cacheSelect(@RequestBody(required = false) String requesyBody) throws IOException {
         JSONObject jsonObject = new JSONObject(requesyBody);
         String startTime = jsonObject.getString("startTime");
         String endTime = jsonObject.getString("endTime");
-        return cacheService.selectCache(startTime,endTime);
+        int page = Integer.parseInt(jsonObject.getString("page"));
+//        List list = cacheService.selectCache(startTime,endTime);
+        PageHelper.startPage(page,10);
+        // 设置分页查询条件
+//        Example example = new Example(cache.class);
+        PageInfo<cache> pageInfo = new PageInfo<>(cacheService.selectCache(startTime,endTime));
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("data",pageInfo.getList());
+        jsonObject1.put("pages",pageInfo.getPages());
+        return jsonObject1.toString();
     }
-
-
 }
