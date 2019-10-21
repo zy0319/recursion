@@ -1,5 +1,6 @@
 package com.zy.recursion.util;
 
+import com.zy.recursion.entity.returnMessage;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -14,7 +15,7 @@ import java.io.IOException;
 
 public class httpPost {
 
-    private static String URL = "http://39.107.238.25:80/analysisapi/";
+
 
     public static String  sendPostDataByJson(String url, String json, String encoding) throws ClientProtocolException, IOException {
         String result = "";
@@ -42,8 +43,12 @@ public class httpPost {
         return result;
     }
 
-    public static String testSendPostDataByJson(JSONObject jsonObject) throws ClientProtocolException, IOException {
-        return sendPostDataByJson(URL, jsonObject.toString(), "utf-8");
+    public static returnMessage testSendPostDataByJson(JSONObject jsonObject) throws ClientProtocolException, IOException {
+        String ip = jsonObject.getString("ip");
+        String URL = "http://"+ip+":8088/analysisapi/";
+        returnMessage returnMessage = new returnMessage();
+        returnMessage.setMessage(sendPostDataByJson(URL, jsonObject.toString(), "utf-8"));
+        return returnMessage;
     }
 
 //    public static void main(String[] args) {

@@ -1,19 +1,17 @@
 package com.zy.recursion.Controller;
 
 import com.alibaba.fastjson.JSONArray;
+import com.zy.recursion.config.annotation;
 import com.zy.recursion.entity.address;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.service.device.deviceService;
 import com.zy.recursion.util.ConnectLinuxCommand;
-
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @RestController
 @RequestMapping(value = "/Linux", method = RequestMethod.GET)
@@ -29,6 +27,7 @@ public class Linux {
     @Autowired
     public ConnectLinuxCommand connectLinuxCommand;
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeDiskUtilization")
     public String nodeDiskUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -37,6 +36,8 @@ public class Linux {
         List<device> list = deviceService.selectIpByNodeName(nodeName);
         float disk = 0f;
         if (list.size() != 0) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("nodeName",nodeName);
             for (device o : list) {
                 String ip = o.getDeviceIp();
                 String name = o.getDeviceUserName();
@@ -48,7 +49,6 @@ public class Linux {
                     float disk1 = new ConnectLinuxCommand().disk_utilization(result[0]);
                     disk = disk1 + disk;
                 }
-                JSONObject jsonObject = new JSONObject();
                 jsonObject.put("disk_utilization", disk / list.size());
                 System.out.println(jsonObject.toString());
                 return jsonObject.toString();
@@ -57,9 +57,9 @@ public class Linux {
         return null;
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeFlow")
+    @PostMapping(value = "/nodeFlow",produces = {"text/html;charset=UTF-8"})
     public String nodeFlow(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String nodeName = jsonObject1.getString("nodeName");
@@ -67,6 +67,8 @@ public class Linux {
         float rxkb = 0f;
         float txkb = 0f;
         if (list.size() != 0) {
+            JSONObject jsonObject2 = new JSONObject();
+            jsonObject2.put("nodeName",nodeName);
             for (device o : list) {
                 String ip = o.getDeviceIp();
                 String name = o.getDeviceUserName();
@@ -81,18 +83,18 @@ public class Linux {
                         txkb = txkb + Float.parseFloat(jsonObject.getString("txkB"));
                     }
                 }
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("txkb", txkb);
-                jsonObject.put("rxkb", rxkb);
-                jsonObject.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
-                System.out.println(jsonObject.toString());
-                return jsonObject.toString();
+
+                jsonObject2.put("txkb", txkb);
+                jsonObject2.put("rxkb", rxkb);
+                jsonObject2.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
+                System.out.println(jsonObject2.toString());
+                return jsonObject2.toString();
             }
         }
         return null;
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeMemoryUtilization")
     public String nodeMemoryUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -102,6 +104,8 @@ public class Linux {
         long start = System.currentTimeMillis();
         float memory = 0f;
         if (list.size() != 0) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("nodeName",nodeName);
             for (device o : list) {
                 String ip = o.getDeviceIp();
                 String name = o.getDeviceUserName();
@@ -115,7 +119,7 @@ public class Linux {
                 }
                 long end = System.currentTimeMillis();
                 System.out.println(end - start);
-                JSONObject jsonObject = new JSONObject();
+
                 jsonObject.put("memory_utilization", memory / list.size());
                 return jsonObject.toString();
             }
@@ -123,7 +127,7 @@ public class Linux {
         return null;
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeCpuUtilization")
     public String nodeCpuUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -133,6 +137,8 @@ public class Linux {
         long start = System.currentTimeMillis();
         float cpu = 0f;
         if (list.size() != 0) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("nodeName",nodeName);
             for (device o : list) {
                 String ip = o.getDeviceIp();
                 String name = o.getDeviceUserName();
@@ -146,7 +152,6 @@ public class Linux {
             }
             long end = System.currentTimeMillis();
             System.out.println(end - start);
-            JSONObject jsonObject = new JSONObject();
             jsonObject.put("cpu_utilization", cpu / list.size());
             System.out.println(jsonObject.toString());
             return jsonObject.toString();
@@ -154,7 +159,7 @@ public class Linux {
         return null;
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeData")
     public String ConnectLinux(@RequestBody(required = false) String requestBody) throws IOException {
@@ -176,6 +181,8 @@ public class Linux {
         int recursion = 0;
         int cache = 0;
         if (list.size() != 0) {
+            JSONObject jsonObject2 = new JSONObject();
+            jsonObject2.put("nodeName",nodeName);
             for (device o : list) {
                 String ip = o.getDeviceIp();
                 String name = o.getDeviceUserName();
@@ -223,29 +230,29 @@ public class Linux {
             long end = System.currentTimeMillis();
             System.out.println(end - start);
 //        System.out.println(disk + "  " + memory + "  " + cpu + "  " + list.size());
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("disk_utilization", disk / list.size());
-            jsonObject.put("memory_utilization", memory / list.size());
-            jsonObject.put("cpu_utilization", cpu / list.size());
-            jsonObject.put("serious", serious);
-            jsonObject.put("imp", imp);
-            jsonObject.put("common", common);
-            jsonObject.put("serious1", serious1);
-            jsonObject.put("imp1", imp1);
-            jsonObject.put("common1", common1);
-            jsonObject.put("cache", cache);
-            jsonObject.put("recursion", recursion);
-            jsonObject.put("txkb", txkb);
-            jsonObject.put("rxkb", rxkb);
-            jsonObject.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
-            System.out.println(jsonObject.toString());
-            return jsonObject.toString();
+
+            jsonObject2.put("disk_utilization", disk / list.size());
+            jsonObject2.put("memory_utilization", memory / list.size());
+            jsonObject2.put("cpu_utilization", cpu / list.size());
+            jsonObject2.put("serious", serious);
+            jsonObject2.put("imp", imp);
+            jsonObject2.put("common", common);
+            jsonObject2.put("serious1", serious1);
+            jsonObject2.put("imp1", imp1);
+            jsonObject2.put("common1", common1);
+            jsonObject2.put("cache", cache);
+            jsonObject2.put("recursion", recursion);
+            jsonObject2.put("txkb", txkb);
+            jsonObject2.put("rxkb", rxkb);
+            jsonObject2.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
+            System.out.println(jsonObject2.toString());
+            return jsonObject2.toString();
         } else {
             return null;
         }
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceData")
     public String deviceData(@RequestBody(required = false) String requestBody) throws IOException {
@@ -268,6 +275,7 @@ public class Linux {
                 txkb = txkb + Float.parseFloat(jsonObject2.getString("txkB"));
             }
             JSONObject jsonObject = new JSONObject();
+            jsonObject.put("deviceIp",deviceIp);
             jsonObject.put("disk_utilization", disk);
             jsonObject.put("memory_utilization", memory);
             jsonObject.put("cpu_utilization", cpu);
@@ -280,6 +288,7 @@ public class Linux {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceDiskUtilization")
     public String deviceDiskUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -295,6 +304,7 @@ public class Linux {
             float disk = new ConnectLinuxCommand().disk_utilization(result[0]);
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("disk_utilization", disk);
+            jsonObject.put("deviceIp",deviceIp);
             long end = System.currentTimeMillis();
             System.out.println(end - start);
             return jsonObject.toString();
@@ -303,6 +313,7 @@ public class Linux {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceMemoryUtilization")
     public String deviceMemoryUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -316,6 +327,7 @@ public class Linux {
         if (result != null) {
             float memory = new ConnectLinuxCommand().memory_utilization(result[0]);
             JSONObject jsonObject = new JSONObject();
+            jsonObject.put("deviceIp",deviceIp);
             jsonObject.put("memory_utilization", memory);
             return jsonObject.toString();
         } else {
@@ -323,7 +335,7 @@ public class Linux {
         }
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceCpuUtilization")
     public String deviceCpuUtilization(@RequestBody(required = false) String requestBody) throws IOException {
@@ -337,6 +349,7 @@ public class Linux {
         if (result != null) {
             float cpu = new ConnectLinuxCommand().cpu_utilization(result[0]);
             JSONObject jsonObject = new JSONObject();
+            jsonObject.put("deviceIp",deviceIp);
             jsonObject.put("cpu_utilization", cpu);
             return jsonObject.toString();
         } else {
@@ -344,7 +357,7 @@ public class Linux {
         }
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceFlow")
     public String deviceFlow(@RequestBody(required = false) String requestBody) throws IOException {
@@ -364,6 +377,7 @@ public class Linux {
                 txkb = txkb + Float.parseFloat(jsonObject2.getString("txkB"));
             }
             JSONObject jsonObject = new JSONObject();
+            jsonObject.put("deviceIp",deviceIp);
             jsonObject.put("rxkb", rxkb);
             jsonObject.put("txkb", txkb);
             jsonObject.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
@@ -373,6 +387,7 @@ public class Linux {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeDataSelect")
     public String nodeDataSelect(@RequestBody(required = false) String requestBody) throws IOException {
@@ -420,7 +435,7 @@ public class Linux {
                     list2.add("服务器连接失败");
                     jsonObject3.put("status1","严重");
                 }
-                jsonObject3.put("ip",ip);
+                jsonObject3.put("deviceIp",ip);
                 jsonObject3.put("type",type);
                 jsonObject3.put("status",list2.toString());
                 list1.add(jsonObject3);

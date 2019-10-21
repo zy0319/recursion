@@ -1,6 +1,6 @@
 package com.zy.recursion.Controller;
 
-import ch.ethz.ssh2.Connection;
+import com.zy.recursion.config.annotation;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.entity.node;
 import com.zy.recursion.service.device.deviceService;
@@ -9,17 +9,14 @@ import com.zy.recursion.util.ConnectLinuxCommand;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import com.zy.recursion.entity.returnMessage;
 
 
 @RestController
 @RequestMapping(value = "/Node", method = RequestMethod.GET)
-
 public class NodeController {
 
     @Autowired
@@ -28,7 +25,7 @@ public class NodeController {
     @Autowired
     private deviceService deviceService;
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/register")
     public returnMessage addNode(@RequestBody(required = false) String requesyBody) {
@@ -62,6 +59,7 @@ public class NodeController {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectAll")
     public List<node> selectAll() {
@@ -69,6 +67,8 @@ public class NodeController {
         return list;
     }
 
+
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectAllData")
     public List selectAllData() throws IOException {
@@ -126,6 +126,7 @@ public class NodeController {
         return list2;
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/delete")
     public returnMessage deleteNode(@RequestBody(required = false) String requesyBody) {
@@ -144,6 +145,7 @@ public class NodeController {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/update")
     public returnMessage updateNode(@RequestBody(required = false) String requesyBody) {

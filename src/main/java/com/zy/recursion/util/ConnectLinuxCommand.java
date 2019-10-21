@@ -3,6 +3,7 @@ package com.zy.recursion.util;
 import java.io.*;
 import java.net.ConnectException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
@@ -10,6 +11,7 @@ import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import ch.ethz.ssh2.StreamGobbler;
 import com.zy.recursion.entity.device;
+import com.zy.recursion.entity.returnMessage;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.slf4j.Logger;
 import org.json.JSONObject;
@@ -260,6 +262,7 @@ public class ConnectLinuxCommand {
         String time = "0";
         int cacheDeviceCount = 0;
         int recursionDeviceCount = 0;
+        String nodeName = list.get(0).getNodeName();
         if (list.size() != 0) {
             for (device o : list) {
                 if (o.getDeviceType().equals("缓存")) {
@@ -351,18 +354,18 @@ public class ConnectLinuxCommand {
                                 break;
                         }
                     }
-                }else {
+                } else {
                     recursionDeviceCount++;
                 }
             }
             JSONObject jsonObject = new JSONObject();
-            if (cacheDeviceCount!=0){
-                jsonObject.put("AVG_REP_TIME", avg_rep /cacheDeviceCount);
+            if (cacheDeviceCount != 0) {
+                jsonObject.put("AVG_REP_TIME", avg_rep / cacheDeviceCount);
                 jsonObject.put("SUCCESS_RATE", success_rate / cacheDeviceCount);
                 jsonObject.put("AVG_RECUR_TIME", avg_recur / cacheDeviceCount);
                 jsonObject.put("RECUR_SUCCESS", recur_success / cacheDeviceCount);
                 jsonObject.put("HIT_RATE", hit_rate / cacheDeviceCount);
-            }else {
+            } else {
                 jsonObject.put("AVG_REP_TIME", avg_rep);
                 jsonObject.put("SUCCESS_RATE", success_rate);
                 jsonObject.put("AVG_RECUR_TIME", avg_recur);
@@ -378,6 +381,7 @@ public class ConnectLinuxCommand {
             jsonObject.put("RECUR", recur);
             jsonObject.put("ALL_RECEIVE", all_receive);
             jsonObject.put("total_time", total_time);
+            jsonObject.put("nodeName", nodeName);
             return jsonObject.toString();
         }
         return null;
@@ -501,11 +505,81 @@ public class ConnectLinuxCommand {
         jsonObject.put("RECUR_SUCCESS", recur_success);
         jsonObject.put("ALL_RECEIVE", all_receive);
         jsonObject.put("total_time", total_time);
+        jsonObject.put("nodeName", o.getNodeName());
+        jsonObject.put("deviceIp", o.getDeviceIp());
         return jsonObject.toString();
+    }
+
+    public returnMessage dns(device device, String ip, String prefix) throws IOException {
+        returnMessage returnMessage = new returnMessage();
+        String[] cmd = {"dig " + "@" + "172.171.1.80" + " " + prefix};
+        String[] result = ConnectLinuxCommand.execute(device.getDeviceIp(), device.getDeviceUserName(), device.getDevicePwd(), cmd);
+        Stack stack = new Stack();
+        JSONObject jsonObject = new JSONObject();
+        BufferedReader br2 = new BufferedReader(new StringReader(result[0]));
+        String line2 = null;
+        while (!(line2 = br2.readLine()).equals(";; AUTHORITY SECTION:")) {
+            stack.push(line2);
+        }
+        br2.close();
+        stack.pop();
+        String m = stack.pop().toString();
+        String a = "";
+        System.out.println(a);
+        if (!m.contains(";")){
+            stack.push(m);
+            List list = new ArrayList();
+            while (!(a = stack.pop().toString()).equals(";; ANSWER SECTION:")) {
+                String b = a.split("\\s+")[3];
+                if (b.equals("A")) {
+                    list.add(a.split("\\s+")[4]);
+                }
+            }
+            returnMessage.setStatus(0);
+            returnMessage.setMessage(list.toString());
+            return returnMessage;
+        }else {
+            returnMessage.setStatus(1);
+            returnMessage.setMessage("解析失败");
+            return returnMessage;
+        }
+    }
+
+
+    public returnMessage oid(device device, String ip, String prefix) throws IOException {
+        returnMessage returnMessage = new returnMessage();
+        String[] cmd = {"dig " + "@" + "172.171.1.80" + " " + prefix + " NAPTR"};
+        String[] result = ConnectLinuxCommand.execute(device.getDeviceIp(), device.getDeviceUserName(), device.getDevicePwd(), cmd);
+        Stack stack = new Stack();
+        JSONObject jsonObject = new JSONObject();
+        BufferedReader br2 = new BufferedReader(new StringReader(result[0]));
+        String line2 = null;
+        while (!(line2 = br2.readLine()).equals(";; AUTHORITY SECTION:")) {
+            stack.push(line2);
+        }
+        br2.close();
+        stack.pop();
+        String m = stack.pop().toString();
+        System.out.println(m);
+        if (!m.contains(";")){
+            stack.push(m);
+            String a = "";
+            while (!(a = stack.pop().toString()).equals(";; ANSWER SECTION:")) {
+                jsonObject.put(a.split("\\s+")[7],a.split("\\s+")[9]);
+            }
+            returnMessage.setStatus(0);
+            returnMessage.setMessage(jsonObject.toString());
+            return returnMessage;
+        }else {
+            returnMessage.setStatus(1);
+            returnMessage.setMessage("解析失败");
+            return returnMessage;
+        }
     }
 
 
     public static void main(String[] args) throws IOException {
+
 
     }
 }

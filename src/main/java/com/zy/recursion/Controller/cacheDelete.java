@@ -2,6 +2,7 @@ package com.zy.recursion.Controller;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.zy.recursion.config.annotation;
 import com.zy.recursion.entity.cache;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.entity.returnMessage;
@@ -20,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 @RestController
 @RequestMapping(value = "/cache", method = RequestMethod.GET)
 public class cacheDelete {
@@ -34,7 +34,7 @@ public class cacheDelete {
     @Autowired
     private cacheService cacheService;
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/handleDelete")
     public returnMessage cacheDelete(@RequestBody(required = false) String requesyBody) throws IOException {
@@ -88,7 +88,7 @@ public class cacheDelete {
         }
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/multiHandleDelete")
     public String multiHandleDelete(@RequestBody(required = false) String requesyBody) throws IOException {
@@ -148,6 +148,7 @@ public class cacheDelete {
 
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/deviceHandleDelete")
     public returnMessage deviceHandleDelete(@RequestBody(required = false) String requesyBody) throws IOException {
@@ -193,6 +194,7 @@ public class cacheDelete {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/nodeHandleDelete")
     public String nodeHandleDelete(@RequestBody(required = false) String requesyBody) throws IOException {
@@ -253,6 +255,7 @@ public class cacheDelete {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/cacheSelect")
     public String cacheSelect(@RequestBody(required = false) String requesyBody) throws IOException {

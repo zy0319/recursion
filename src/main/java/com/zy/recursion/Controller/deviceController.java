@@ -1,5 +1,6 @@
 package com.zy.recursion.Controller;
 
+import com.zy.recursion.config.annotation;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.entity.node;
 import com.zy.recursion.entity.returnMessage;
@@ -13,6 +14,7 @@ import java.util.List;
 import com.zy.recursion.util.ConnectLinuxCommand;
 
 
+
 @RestController
 @RequestMapping(value = "/Device", method = RequestMethod.GET)
 public class deviceController {
@@ -23,6 +25,7 @@ public class deviceController {
     @Autowired
     private nodeService nodeService;
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/register")
     public returnMessage addDevice(@RequestBody(required = false) String requesyBody) throws IOException {
@@ -76,13 +79,14 @@ public class deviceController {
         }
     }
 
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectAll")
     public List<device> selectAll() {
         List<device> list = deviceService.selectAll();
         return list;
     }
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectDeviceByNodename")
     public List selectDeviceByNodename(@RequestBody(required = false) String requesyBody) {
@@ -90,7 +94,7 @@ public class deviceController {
         List<device> list = deviceService.selectDeviceByNodeName(jsonObject.getString("nodeName"));
         return list;
     }
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectDeviceByIp")
     public String selectDeviceByIp(@RequestBody(required = false) String requesyBody) {
@@ -100,7 +104,7 @@ public class deviceController {
         return device.getDeviceType();
     }
 
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectIp")
     public List selectIp(@RequestBody(required = false) String requesyBody) {
@@ -111,7 +115,7 @@ public class deviceController {
         }
         return list;
     }
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/delete")
     public returnMessage deletedevice(@RequestBody(required = false) String requesyBody) {
@@ -139,7 +143,7 @@ public class deviceController {
             return returnMessage;
         }
     }
-
+    @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/update")
     public returnMessage updatedevice(@RequestBody(required = false) String requesyBody) {
