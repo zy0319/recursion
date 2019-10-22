@@ -86,6 +86,7 @@ public class deviceController {
         List<device> list = deviceService.selectAll();
         return list;
     }
+
     @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/selectDeviceByNodename")
@@ -94,9 +95,10 @@ public class deviceController {
         List<device> list = deviceService.selectDeviceByNodeName(jsonObject.getString("nodeName"));
         return list;
     }
+
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/selectDeviceByIp")
+    @PostMapping(value = "/selectDeviceByIp",produces = {"text/html;charset=UTF-8"})
     public String selectDeviceByIp(@RequestBody(required = false) String requesyBody) {
         JSONObject jsonObject = new JSONObject(requesyBody);
         String type = jsonObject.getString("deviceIp");
@@ -115,6 +117,7 @@ public class deviceController {
         }
         return list;
     }
+
     @annotation.UserLoginToken
     @CrossOrigin
     @PostMapping(value = "/delete")

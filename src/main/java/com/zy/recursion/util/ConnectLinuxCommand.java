@@ -6,12 +6,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-
 import ch.ethz.ssh2.Connection;
 import ch.ethz.ssh2.Session;
 import ch.ethz.ssh2.StreamGobbler;
 import com.zy.recursion.entity.device;
 import com.zy.recursion.entity.returnMessage;
+import io.micrometer.core.instrument.util.StringEscapeUtils;
 import io.micrometer.core.instrument.util.StringUtils;
 import org.slf4j.Logger;
 import org.json.JSONObject;
@@ -160,7 +160,7 @@ public class ConnectLinuxCommand {
 //    @Async
     public Float disk_utilization(String result) throws IOException {
         int used = 0;
-        int available = 0;
+        long available = 0;
         Stack stack = new Stack();
 //        if (ConnectLinuxCommand.execute(ip, name, pwd, "df -k") != null) {
 //            BufferedReader br = new BufferedReader(new StringReader(ConnectLinuxCommand.execute(ip, name, pwd, "df -k")));
@@ -174,10 +174,13 @@ public class ConnectLinuxCommand {
             String a = stack.pop().toString();
             used = used + Integer.parseInt(a.split("\\s+")[2]);
 //                System.out.println("已用" + used);
-            available = available + Integer.parseInt(a.split("\\s+")[3]);
-//                System.out.println("可用" + available);
+
+            available = available + Long.parseLong(a.split("\\s+")[3]);
+                System.out.println("可用" + available);
         }
         DecimalFormat df = new DecimalFormat("0.0000");
+        System.out.println("已用"+used);
+        System.out.println("可用"+available);
         Float disk_utilization = Float.valueOf(df.format((float) used / (available + used)));
 //            System.out.println(disk_utilization);
         return disk_utilization;
@@ -560,17 +563,19 @@ public class ConnectLinuxCommand {
         br2.close();
         stack.pop();
         String m = stack.pop().toString();
-        System.out.println(m);
+//        System.out.println(m);
         if (!m.contains(";")){
             stack.push(m);
             String a = "";
             while (!(a = stack.pop().toString()).equals(";; ANSWER SECTION:")) {
-                jsonObject.put(a.split("\\s+")[7],a.split("\\s+")[9]);
+                String key1 = a.split("\\s+")[7];
+                String key2 = a.split("\\s+")[9];
+                jsonObject.put(key1.substring(1,key1.length()-1),key2.substring(0,key2.length()-1));
             }
             returnMessage.setStatus(0);
             returnMessage.setMessage(jsonObject.toString());
             return returnMessage;
-        }else {
+        } else {
             returnMessage.setStatus(1);
             returnMessage.setMessage("解析失败");
             return returnMessage;
@@ -579,7 +584,6 @@ public class ConnectLinuxCommand {
 
 
     public static void main(String[] args) throws IOException {
-
 
     }
 }

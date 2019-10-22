@@ -18,11 +18,13 @@ public class loginTokenImpl implements loginToken {
     private tokenDao tokenDao;
 
     public String getToken(String userName,String pwd) {
-        Date start = new Date();
-        long currentTime = System.currentTimeMillis() + 30* 60 * 1000;//一小时有效时间
-        Date end = new Date(currentTime);
+//        Date start = new Date();
+//        long currentTime = System.currentTimeMillis() + 30* 60 * 1000;//一小时有效时间
+//        Date end = new Date(currentTime);
         String token= "";
-        token= JWT.create().withAudience(userName).withIssuedAt(start).withExpiresAt(end).sign(Algorithm.HMAC256(pwd));
+        token= JWT.create().withAudience(userName).sign(Algorithm.HMAC256(pwd));
+
+//        token= JWT.create().withAudience(userName).withIssuedAt(start).withExpiresAt(end).sign(Algorithm.HMAC256(pwd));
         return token;
     }
 

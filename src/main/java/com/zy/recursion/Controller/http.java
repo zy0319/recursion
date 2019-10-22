@@ -75,7 +75,7 @@ public class http {
                 return null;
             }
         }else if (prefixType.equals("Oid") || prefixType.equals("GS1") || prefixType.equals("Ecode")){
-            if (ip.equals("39.107.238.25") || ip.equals("172.171.1.80")){
+            if (ip.equals("172.171.1.80")){
                 device device = deviceService.selectByIp1(ip);
                 return new ConnectLinuxCommand().oid(device,ip,prefix);
             }else{

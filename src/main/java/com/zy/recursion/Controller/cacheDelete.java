@@ -1,5 +1,4 @@
 package com.zy.recursion.Controller;
-
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.zy.recursion.config.annotation;
@@ -90,7 +89,7 @@ public class cacheDelete {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/multiHandleDelete")
+    @PostMapping(value = "/multiHandleDelete",produces = {"text/html;charset=UTF-8"})
     public String multiHandleDelete(@RequestBody(required = false) String requesyBody) throws IOException {
         Logger logger = LoggerFactory.getLogger(cacheDelete.class);
         cache cache = new cache();
@@ -196,7 +195,7 @@ public class cacheDelete {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeHandleDelete")
+    @PostMapping(value = "/nodeHandleDelete",produces = {"text/html;charset=UTF-8"})
     public String nodeHandleDelete(@RequestBody(required = false) String requesyBody) throws IOException {
         Logger logger = LoggerFactory.getLogger(cacheDelete.class);
         JSONObject jsonObject = new JSONObject(requesyBody);
@@ -257,7 +256,7 @@ public class cacheDelete {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/cacheSelect")
+    @PostMapping(value = "/cacheSelect",produces = {"text/html;charset=UTF-8"})
     public String cacheSelect(@RequestBody(required = false) String requesyBody) throws IOException {
         JSONObject jsonObject = new JSONObject(requesyBody);
         String startTime = jsonObject.getString("startTime");

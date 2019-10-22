@@ -29,7 +29,7 @@ public class Linux {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeDiskUtilization")
+    @PostMapping(value = "/nodeDiskUtilization",produces = {"text/html;charset=UTF-8"})
     public String nodeDiskUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String nodeName = jsonObject1.getString("nodeName");
@@ -96,7 +96,7 @@ public class Linux {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeMemoryUtilization")
+    @PostMapping(value = "/nodeMemoryUtilization",produces = {"text/html;charset=UTF-8"})
     public String nodeMemoryUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String nodeName = jsonObject1.getString("nodeName");
@@ -129,7 +129,7 @@ public class Linux {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeCpuUtilization")
+    @PostMapping(value = "/nodeCpuUtilization",produces = {"text/html;charset=UTF-8"})
     public String nodeCpuUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String nodeName = jsonObject1.getString("nodeName");
@@ -161,7 +161,7 @@ public class Linux {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeData")
+    @PostMapping(value = "/nodeData",produces = {"text/html;charset=UTF-8"})
     public String ConnectLinux(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String nodeName = jsonObject1.getString("nodeName");
@@ -254,7 +254,7 @@ public class Linux {
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/deviceData")
+    @PostMapping(value = "/deviceData",produces = {"text/html;charset=UTF-8"})
     public String deviceData(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         float rxkb = 0f;
@@ -284,16 +284,15 @@ public class Linux {
             jsonObject.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
             return jsonObject.toString();
         } else {
-            return "服务器连接失败";
+            return "Server connection failed";
         }
     }
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/deviceDiskUtilization")
+    @PostMapping(value = "/deviceDiskUtilization",produces = {"text/html;charset=UTF-8"})
     public String deviceDiskUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
-        long start = System.currentTimeMillis();
         String deviceIp = jsonObject1.getString("deviceIp");
         device device = deviceService.selectByIp1(deviceIp);
         String name = device.getDeviceUserName();
@@ -305,17 +304,15 @@ public class Linux {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("disk_utilization", disk);
             jsonObject.put("deviceIp",deviceIp);
-            long end = System.currentTimeMillis();
-            System.out.println(end - start);
             return jsonObject.toString();
         } else {
-            return "服务器连接失败";
+            return "Server connection failed";
         }
     }
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/deviceMemoryUtilization")
+    @PostMapping(value = "/deviceMemoryUtilization",produces = {"text/html;charset=UTF-8"})
     public String deviceMemoryUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String deviceIp = jsonObject1.getString("deviceIp");
@@ -331,13 +328,13 @@ public class Linux {
             jsonObject.put("memory_utilization", memory);
             return jsonObject.toString();
         } else {
-            return "服务器连接失败";
+            return "Server connection failed";
         }
     }
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/deviceCpuUtilization")
+    @PostMapping(value = "/deviceCpuUtilization",produces = {"text/html;charset=UTF-8"})
     public String deviceCpuUtilization(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         String deviceIp = jsonObject1.getString("deviceIp");
@@ -353,13 +350,13 @@ public class Linux {
             jsonObject.put("cpu_utilization", cpu);
             return jsonObject.toString();
         } else {
-            return "服务器连接失败";
+            return "Server connection failed";
         }
     }
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/deviceFlow")
+    @PostMapping(value = "/deviceFlow",produces = {"text/html;charset=UTF-8"})
     public String deviceFlow(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         float rxkb = 0f;
@@ -383,13 +380,13 @@ public class Linux {
             jsonObject.put("bandwidth_utilization", (rxkb + txkb) / (address.getBandwidthSet() * 1024));
             return jsonObject.toString();
         } else {
-            return "服务器连接失败";
+            return "Server connection failed";
         }
     }
 
     @annotation.UserLoginToken
     @CrossOrigin
-    @PostMapping(value = "/nodeDataSelect")
+    @PostMapping(value = "/nodeDataSelect",produces = {"text/html;charset=UTF-8"})
     public String nodeDataSelect(@RequestBody(required = false) String requestBody) throws IOException {
         JSONObject jsonObject1 = new JSONObject(requestBody);
         List list1 = new ArrayList();
