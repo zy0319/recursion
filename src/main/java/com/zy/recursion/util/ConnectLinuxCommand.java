@@ -106,13 +106,13 @@ public class ConnectLinuxCommand {
                     session = connection.openSession();
                     session.execCommand(cmd[i]);// 执行命令
                     result[i] = processStdout(session.getStdout(), DEFAULTCHARTSET);
+                    session.close();
                     // 如果为得到标准输出为空，说明脚本执行出错了
                     if (StringUtils.isBlank(result[i])) {
                         result[i] = processStdout(session.getStderr(), DEFAULTCHARTSET);
                     }
                 }
                 connection.close();
-                session.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -174,7 +174,6 @@ public class ConnectLinuxCommand {
             String a = stack.pop().toString();
             used = used + Integer.parseInt(a.split("\\s+")[2]);
 //                System.out.println("已用" + used);
-
             available = available + Long.parseLong(a.split("\\s+")[3]);
                 System.out.println("可用" + available);
         }
@@ -249,6 +248,11 @@ public class ConnectLinuxCommand {
 
     public String logRead(List<device> list, String address) throws IOException {
         Stack stack2 = new Stack();
+        int handle  = 0;
+        int dns  = 0;
+        int oid  = 0;
+        int ecode  = 0;
+        int gs1  = 0;
         int receive = 0;
         int drop = 0;
         int reply = 0;
@@ -273,7 +277,7 @@ public class ConnectLinuxCommand {
                     String[] cmd = {"tail -2 " + address};
                     String[] result = ConnectLinuxCommand.execute(o.getDeviceIp(), o.getDeviceUserName(), o.getDevicePwd(), cmd);
                     BufferedReader br2 = new BufferedReader(new StringReader(result[0]));
-                    String line2 = null;
+                    String line2;
                     while ((line2 = br2.readLine()) != null) {
                         stack2.push(line2);
                     }
@@ -282,18 +286,23 @@ public class ConnectLinuxCommand {
                     if (splitAddress[0].contains(":")) {
                         time = splitAddress[0].substring(1, 9);
                         receive = Integer.parseInt(splitAddress[0].substring(10).trim()) + receive;
-                        drop = Integer.parseInt(splitAddress[1].trim()) + drop;
-                        reply = Integer.parseInt(splitAddress[2].trim()) + reply;
-                        avg_rep = Integer.parseInt(splitAddress[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
-                        success = Integer.parseInt(splitAddress[4].trim()) + success;
-                        other = Integer.parseInt(splitAddress[5].trim()) + other;
-                        success_rate = Float.parseFloat(splitAddress[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
-                        hit_rate = Float.parseFloat(splitAddress[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
-                        recur = Integer.parseInt(splitAddress[8].trim()) + recur;
-                        avg_recur = Integer.parseInt(splitAddress[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
-                        recur_success = Float.parseFloat(splitAddress[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
-                        all_receive = Float.parseFloat(splitAddress[11].trim()) + all_receive;
-                        total_time = splitAddress[12];
+                        handle = Integer.parseInt(splitAddress[1].trim()) + handle;
+                        dns = Integer.parseInt(splitAddress[2].trim()) + dns;
+                        oid = Integer.parseInt(splitAddress[3].trim()) + oid;
+                        ecode = Integer.parseInt(splitAddress[4].trim()) + ecode;
+                        gs1 = Integer.parseInt(splitAddress[5].trim()) + gs1;
+                        drop = Integer.parseInt(splitAddress[6].trim()) + drop;
+                        reply = Integer.parseInt(splitAddress[7].trim()) + reply;
+                        avg_rep = Integer.parseInt(splitAddress[8].substring(0, splitAddress[8].length() - 2).trim()) + avg_rep;
+                        success = Integer.parseInt(splitAddress[9].trim()) + success;
+                        other = Integer.parseInt(splitAddress[10].trim()) + other;
+                        success_rate = Float.parseFloat(splitAddress[11].substring(0, splitAddress[11].length() - 1).trim()) + success_rate;
+                        hit_rate = Float.parseFloat(splitAddress[12].substring(0, splitAddress[12].length() - 1).trim()) + hit_rate;
+                        recur = Integer.parseInt(splitAddress[13].trim()) + recur;
+                        avg_recur = Integer.parseInt(splitAddress[14].substring(0, splitAddress[14].length() - 2).trim()) + avg_recur;
+                        recur_success = Float.parseFloat(splitAddress[15].substring(0, splitAddress[15].length() - 1).trim()) + recur_success;
+                        all_receive = Float.parseFloat(splitAddress[16].trim()) + all_receive;
+                        total_time = splitAddress[17];
                         String text = total_time.substring(6, 18);
                         String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
                         System.out.println(condition);
@@ -321,18 +330,23 @@ public class ConnectLinuxCommand {
                         String[] splitAddress1 = stack2.pop().toString().split("\\|");
                         time = splitAddress1[0].substring(1, 9);
                         receive = Integer.parseInt(splitAddress1[0].substring(10).trim()) + receive;
-                        drop = Integer.parseInt(splitAddress1[1].trim()) + drop;
-                        reply = Integer.parseInt(splitAddress1[2].trim()) + reply;
-                        avg_rep = Integer.parseInt(splitAddress1[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
-                        success = Integer.parseInt(splitAddress1[4].trim()) + success;
-                        other = Integer.parseInt(splitAddress1[5].trim()) + other;
-                        success_rate = Float.parseFloat(splitAddress1[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
-                        hit_rate = Float.parseFloat(splitAddress1[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
-                        recur = Integer.parseInt(splitAddress1[8].trim()) + recur;
-                        avg_recur = Integer.parseInt(splitAddress1[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
-                        recur_success = Float.parseFloat(splitAddress1[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
-                        all_receive = Float.parseFloat(splitAddress1[11].trim()) + all_receive;
-                        total_time = splitAddress1[12].trim();
+                        handle = Integer.parseInt(splitAddress1[1].trim()) + handle;
+                        dns = Integer.parseInt(splitAddress1[2].trim()) + dns;
+                        oid = Integer.parseInt(splitAddress1[3].trim()) + oid;
+                        ecode = Integer.parseInt(splitAddress1[4].trim()) + ecode;
+                        gs1 = Integer.parseInt(splitAddress1[5].trim()) + gs1;
+                        drop = Integer.parseInt(splitAddress1[6].trim()) + drop;
+                        reply = Integer.parseInt(splitAddress1[7].trim()) + reply;
+                        avg_rep = Integer.parseInt(splitAddress1[8].substring(0, splitAddress[8].length() - 2).trim()) + avg_rep;
+                        success = Integer.parseInt(splitAddress1[9].trim()) + success;
+                        other = Integer.parseInt(splitAddress1[10].trim()) + other;
+                        success_rate = Float.parseFloat(splitAddress1[11].substring(0, splitAddress[11].length() - 1).trim()) + success_rate;
+                        hit_rate = Float.parseFloat(splitAddress1[12].substring(0, splitAddress[12].length() - 1).trim()) + hit_rate;
+                        recur = Integer.parseInt(splitAddress1[13].trim()) + recur;
+                        avg_recur = Integer.parseInt(splitAddress1[14].substring(0, splitAddress[14].length() - 2).trim()) + avg_recur;
+                        recur_success = Float.parseFloat(splitAddress1[15].substring(0, splitAddress[15].length() - 1).trim()) + recur_success;
+                        all_receive = Float.parseFloat(splitAddress1[16].trim()) + all_receive;
+                        total_time = splitAddress1[17];
                         String text = total_time.substring(6, 18);
                         String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
                         System.out.println(condition);
@@ -375,6 +389,11 @@ public class ConnectLinuxCommand {
                 jsonObject.put("RECUR_SUCCESS", recur_success);
                 jsonObject.put("HIT_RATE", hit_rate);
             }
+            jsonObject.put("HANDLE", handle);
+            jsonObject.put("DNS", dns);
+            jsonObject.put("OID", oid);
+            jsonObject.put("ECODE", ecode);
+            jsonObject.put("GS1", gs1);
             jsonObject.put("TIME", time);
             jsonObject.put("RECEIVE", receive);
             jsonObject.put("DROP", drop);
@@ -393,6 +412,11 @@ public class ConnectLinuxCommand {
     public String logRead1(device o, String address) throws IOException {
         Stack stack2 = new Stack();
         int receive = 0;
+        int handle  = 0;
+        int dns  = 0;
+        int oid  = 0;
+        int ecode  = 0;
+        int gs1  = 0;
         int drop = 0;
         int reply = 0;
         int avg_rep = 0;
@@ -418,18 +442,23 @@ public class ConnectLinuxCommand {
         if (splitAddress[0].contains(":")) {
             time = splitAddress[0].substring(1, 9);
             receive = Integer.parseInt(splitAddress[0].substring(10).trim()) + receive;
-            drop = Integer.parseInt(splitAddress[1].trim()) + drop;
-            reply = Integer.parseInt(splitAddress[2].trim()) + reply;
-            avg_rep = Integer.parseInt(splitAddress[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
-            success = Integer.parseInt(splitAddress[4].trim()) + success;
-            other = Integer.parseInt(splitAddress[5].trim()) + other;
-            success_rate = Float.parseFloat(splitAddress[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
-            hit_rate = Float.parseFloat(splitAddress[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
-            recur = Integer.parseInt(splitAddress[8].trim()) + recur;
-            avg_recur = Integer.parseInt(splitAddress[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
-            recur_success = Float.parseFloat(splitAddress[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
-            all_receive = Float.parseFloat(splitAddress[11].trim()) + all_receive;
-            total_time = splitAddress[12];
+            handle = Integer.parseInt(splitAddress[1].trim()) + handle;
+            dns = Integer.parseInt(splitAddress[2].trim()) + dns;
+            oid = Integer.parseInt(splitAddress[3].trim()) + oid;
+            ecode = Integer.parseInt(splitAddress[4].trim()) + ecode;
+            gs1 = Integer.parseInt(splitAddress[5].trim()) + gs1;
+            drop = Integer.parseInt(splitAddress[6].trim()) + drop;
+            reply = Integer.parseInt(splitAddress[7].trim()) + reply;
+            avg_rep = Integer.parseInt(splitAddress[8].substring(0, splitAddress[8].length() - 2).trim()) + avg_rep;
+            success = Integer.parseInt(splitAddress[9].trim()) + success;
+            other = Integer.parseInt(splitAddress[10].trim()) + other;
+            success_rate = Float.parseFloat(splitAddress[11].substring(0, splitAddress[11].length() - 1).trim()) + success_rate;
+            hit_rate = Float.parseFloat(splitAddress[12].substring(0, splitAddress[12].length() - 1).trim()) + hit_rate;
+            recur = Integer.parseInt(splitAddress[13].trim()) + recur;
+            avg_recur = Integer.parseInt(splitAddress[14].substring(0, splitAddress[14].length() - 2).trim()) + avg_recur;
+            recur_success = Float.parseFloat(splitAddress[15].substring(0, splitAddress[15].length() - 1).trim()) + recur_success;
+            all_receive = Float.parseFloat(splitAddress[16].trim()) + all_receive;
+            total_time = splitAddress[17];
             String text = total_time.substring(6, 18);
             String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
             System.out.println(condition);
@@ -457,18 +486,23 @@ public class ConnectLinuxCommand {
             String[] splitAddress1 = stack2.pop().toString().split("\\|");
             time = splitAddress1[0].substring(1, 9);
             receive = Integer.parseInt(splitAddress1[0].substring(10).trim()) + receive;
-            drop = Integer.parseInt(splitAddress1[1].trim()) + drop;
-            reply = Integer.parseInt(splitAddress1[2].trim()) + reply;
-            avg_rep = Integer.parseInt(splitAddress1[3].substring(0, splitAddress[3].length() - 2).trim()) + avg_rep;
-            success = Integer.parseInt(splitAddress1[4].trim()) + success;
-            other = Integer.parseInt(splitAddress1[5].trim()) + other;
-            success_rate = Float.parseFloat(splitAddress1[6].substring(0, splitAddress[6].length() - 1).trim()) + success_rate;
-            hit_rate = Float.parseFloat(splitAddress1[7].substring(0, splitAddress[7].length() - 1).trim()) + hit_rate;
-            recur = Integer.parseInt(splitAddress1[8].trim()) + recur;
-            avg_recur = Integer.parseInt(splitAddress1[9].substring(0, splitAddress[9].length() - 2).trim()) + avg_recur;
-            recur_success = Float.parseFloat(splitAddress1[10].substring(0, splitAddress[10].length() - 1).trim()) + recur_success;
-            all_receive = Float.parseFloat(splitAddress1[11].trim()) + all_receive;
-            total_time = splitAddress1[12].trim();
+            handle = Integer.parseInt(splitAddress1[1].trim()) + handle;
+            dns = Integer.parseInt(splitAddress1[2].trim()) + dns;
+            oid = Integer.parseInt(splitAddress1[3].trim()) + oid;
+            ecode = Integer.parseInt(splitAddress1[4].trim()) + ecode;
+            gs1 = Integer.parseInt(splitAddress1[5].trim()) + gs1;
+            drop = Integer.parseInt(splitAddress1[6].trim()) + drop;
+            reply = Integer.parseInt(splitAddress1[7].trim()) + reply;
+            avg_rep = Integer.parseInt(splitAddress1[8].substring(0, splitAddress[8].length() - 2).trim()) + avg_rep;
+            success = Integer.parseInt(splitAddress1[9].trim()) + success;
+            other = Integer.parseInt(splitAddress1[10].trim()) + other;
+            success_rate = Float.parseFloat(splitAddress1[11].substring(0, splitAddress[11].length() - 1).trim()) + success_rate;
+            hit_rate = Float.parseFloat(splitAddress1[12].substring(0, splitAddress[12].length() - 1).trim()) + hit_rate;
+            recur = Integer.parseInt(splitAddress1[13].trim()) + recur;
+            avg_recur = Integer.parseInt(splitAddress1[14].substring(0, splitAddress[14].length() - 2).trim()) + avg_recur;
+            recur_success = Float.parseFloat(splitAddress1[15].substring(0, splitAddress[15].length() - 1).trim()) + recur_success;
+            all_receive = Float.parseFloat(splitAddress1[16].trim()) + all_receive;
+            total_time = splitAddress1[17];
             String text = total_time.substring(6, 18);
             String condition = text.substring(2, 3) + text.substring(5, 6) + text.substring(8, 9) + text.substring(11, 12);
             System.out.println(condition);
@@ -510,6 +544,11 @@ public class ConnectLinuxCommand {
         jsonObject.put("total_time", total_time);
         jsonObject.put("nodeName", o.getNodeName());
         jsonObject.put("deviceIp", o.getDeviceIp());
+        jsonObject.put("HANDLE", handle);
+        jsonObject.put("DNS", dns);
+        jsonObject.put("OID", oid);
+        jsonObject.put("ECODE", ecode);
+        jsonObject.put("GS1", gs1);
         return jsonObject.toString();
     }
 
@@ -584,6 +623,9 @@ public class ConnectLinuxCommand {
 
 
     public static void main(String[] args) throws IOException {
+//
+//        String[] cmd = new String[]{"tail -2 /home/fnii/handle_cache/log/handle_cache_stats.1"};
+//        System.out.println(ConnectLinuxCommand.execute("172.171.1.80","root","pms123handle$%^",cmd)[0]);
 
     }
 }

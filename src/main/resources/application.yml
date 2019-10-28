@@ -23,7 +23,7 @@ spring:
     time-zone: GMT+8
 
 address:
-  address: /root/recursion/File/handle_cache_stats
+  address: /home/fnii/handle_cache/log/handle_cache_stats
   networkCard: em4
   bandwidthSet: 1000
 
